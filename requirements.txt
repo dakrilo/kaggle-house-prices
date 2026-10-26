@@ -1,0 +1,11 @@
+numpy==2.5.4
+pandas==3.0.6
+matplotlib==3.11.2
+seaborn==0.13.2
+scikit-learn==1.9.1
+torch==2.14.1
+catboost==1.2.10
+lightgbm==4.7.0
+xgboost==3.4.1
+omegaconf==2.4.0
+ipykernel==7.4.0

@@ -1,0 +1,29 @@
+task: regression
+
+data:
+  train_path: data/train.csv
+  test_path: data/test.csv
+  target: SalePrice
+  id_column: Id
+  log_target: true
+
+metric: neg_root_mean_squared_error
+n_splits: 5
+seed: 42
+
+output_dir: outputs
+results_path: ${output_dir}/results.csv
+reports_dir: reports
+
+features:
+  numeric: ["OverallQual", "GrLivArea", "GarageCars", "TotalBsmtSF"]
+  categorical: []
+  log_numeric: []
+
+preprocessing:
+  encoder: onehot
+  scale: true
+
+model:
+  name: linreg
+  params: {}
