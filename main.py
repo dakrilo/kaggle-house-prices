@@ -15,7 +15,7 @@ def main():
     X, y, X_test, test_ids = load_data(config)
     model = build_model(config)
     scores, test_pred = cross_validate(model, X, y, X_test, config)
-    print(f"CV {config.metric}: {scores.mean():.4f} ± {scores.std():.4f}")
+    print(f"CV RMSE: {scores.mean():.4f} ± {scores.std():.4f}")
     path = save_submission(test_ids, test_pred, config, config.model.name)
     print(f"Сабмит сохранён: {path}")
 

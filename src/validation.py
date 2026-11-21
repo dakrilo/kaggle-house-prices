@@ -1,33 +1,41 @@
 import os
-import numpy as np
-import pandas as pd
 from datetime import datetime
 
+import numpy as np
+import pandas as pd
 from sklearn.base import clone
 from sklearn.metrics import get_scorer
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import KFold, StratifiedKFold
 
 
 def cross_validate(model, X, y, X_test, config):
     """
-    Оценивает модель на Stratified K-Fold.
-    Возвращает массив значений метрики, по одному на фолд, а также усреднённые вероятности на test.
+    Оценивает модель на K-Fold (или Stratified K-Fold по корзинам таргета).
+    Возвращает RMSE по фолдам и усреднённые предсказания на test.
     """
-    skf = StratifiedKFold(
-        n_splits=config.n_splits, shuffle=True, random_state=config.seed
-    )
+    n_bins = config.get("stratify_bins", 0)
+    if n_bins > 0:
+        splitter = StratifiedKFold(
+            n_splits=config.n_splits, shuffle=True, random_state=config.seed
+        )
+        groups = pd.qcut(y, q=n_bins, labels=False)
+    else:
+        splitter = KFold(
+            n_splits=config.n_splits, shuffle=True, random_state=config.seed
+        )
+        groups = y
     scorer = get_scorer(config.metric)
 
     test_pred = np.zeros(len(X_test))
     scores = []
-    for train_idx, val_idx in skf.split(X, y):
+    for train_idx, val_idx in splitter.split(X, groups):
         X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
         y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
 
         fold_model = clone(model)
         fold_model.fit(X_train, y_train)
-        scores.append(scorer(fold_model, X_val, y_val))
-        test_pred += fold_model.predict_proba(X_test)[:, 1]
+        scores.append(abs(scorer(fold_model, X_val, y_val)))
+        test_pred += fold_model.predict(X_test)
     test_pred /= config.n_splits
 
     return np.array(scores), test_pred

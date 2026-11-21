@@ -1,27 +1,31 @@
+from catboost import CatBoostRegressor
+from lightgbm import LGBMRegressor
 from omegaconf import OmegaConf
-
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import (
+    ElasticNet,
+    Lasso,
+    LinearRegression,
+    Ridge,
+)
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-
-from catboost import CatBoostClassifier
-from lightgbm import LGBMClassifier
-from xgboost import XGBClassifier
+from sklearn.tree import DecisionTreeRegressor
+from xgboost import XGBRegressor
 
 from src.data import build_preprocessor
-from src.nn import MLPClassifierTorch
 
 MODELS = {
-    "logreg": LogisticRegression,
-    "knn": KNeighborsClassifier,
-    "tree": DecisionTreeClassifier,
-    "rf": RandomForestClassifier,
-    "catboost": CatBoostClassifier,
-    "lgbm": LGBMClassifier,
-    "xgb": XGBClassifier,
-    "mlp": MLPClassifierTorch,
+    "linreg": LinearRegression,
+    "lasso": Lasso,
+    "ridge": Ridge,
+    "elasticnet": ElasticNet,
+    "knn": KNeighborsRegressor,
+    "tree": DecisionTreeRegressor,
+    "rf": RandomForestRegressor,
+    "catboost": CatBoostRegressor,
+    "lgbm": LGBMRegressor,
+    "xgb": XGBRegressor,
 }
 
 

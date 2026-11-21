@@ -1,5 +1,3 @@
-task: regression
-
 data:
   train_path: data/train.csv
   test_path: data/test.csv
@@ -9,6 +7,7 @@ data:
 
 metric: neg_root_mean_squared_error
 n_splits: 5
+stratify_bins: 10
 seed: 42
 
 output_dir: outputs

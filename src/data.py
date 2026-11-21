@@ -1,14 +1,16 @@
 import os
+
 import numpy as np
 import pandas as pd
-
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import OrdinalEncoder
-from sklearn.preprocessing import FunctionTransformer
 from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import (
+    FunctionTransformer,
+    OneHotEncoder,
+    OrdinalEncoder,
+    StandardScaler,
+)
 
 from src.features import add_features
 
@@ -25,6 +27,8 @@ def load_data(config):
     id_col = config.data.id_column
 
     y = train[target]
+    if config.data.get("log_target", False):
+        y = np.log1p(y)
     X = train.drop(columns=[target, id_col])
     X_test = test.drop(columns=[id_col])
     test_ids = test[id_col]
@@ -32,25 +36,24 @@ def load_data(config):
     X = add_features(X)
     X_test = add_features(X_test)
 
-    # TicketGroup: сколько пассажиров едут по одному билету (считаем по train и test вместе).
-    counts = pd.concat([X["Ticket"], X_test["Ticket"]]).value_counts()
-    X["TicketGroup"] = X["Ticket"].map(counts)
-    X_test["TicketGroup"] = X_test["Ticket"].map(counts)
-
     return X, y, X_test, test_ids
 
 
 def save_submission(test_ids, test_pred, config, name):
     """
     Функция сохраняет результаты в файл submission для будущих сабмитов на Kaggle.
+    Переводит предсказания обратно из логарифма (expm1), если log_target.
     """
     os.makedirs(config.output_dir, exist_ok=True)
     path = os.path.join(config.output_dir, f"submission_{name}.csv")
 
+    if config.data.get("log_target", False):
+        test_pred = np.expm1(test_pred)
+
     submission = pd.DataFrame(
         {
             config.data.id_column: test_ids,
-            config.data.target: (test_pred > 0.5).astype(int),
+            config.data.target: test_pred,
         }
     )
     submission.to_csv(path, index=False)
