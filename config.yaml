@@ -65,6 +65,7 @@ preprocessing:
       PavedDrive: paved
 
 model:
-  name: ridge
+  name: lasso
   params:
-    alpha: 10
+    alpha: 0.0003
+    max_iter: 20000
