@@ -22,7 +22,8 @@ features:
             "EnclosedPorch", "ScreenPorch", "MoSold", "YrSold",
             "ExterQual", "ExterCond", "BsmtQual", "BsmtCond", "HeatingQC", "KitchenQual",
             "FireplaceQu", "GarageQual", "GarageCond", "BsmtExposure", "BsmtFinType1",
-            "BsmtFinType2", "GarageFinish", "Functional", "PavedDrive"]
+            "BsmtFinType2", "GarageFinish", "Functional", "PavedDrive",
+            "Qual2", "HasGarage", "HasBsmt"]
   categorical: ["MSZoning", "Alley", "LotShape", "LandContour", "LotConfig", "LandSlope",
                 "Neighborhood", "Condition1", "BldgType", "HouseStyle", "RoofStyle",
                 "Exterior1st", "Exterior2nd", "MasVnrType", "Foundation", "CentralAir",
