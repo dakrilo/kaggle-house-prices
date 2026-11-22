@@ -8,7 +8,7 @@ from src.validation import cross_validate
 def suggest_params(trial, space):
     """
     Берёт у trial значения параметров по описанию пространства из конфига.
-    space: {имя: {type: int|float, low, high, step?, log?}}.
+    space: {имя: {type: int|float|categorical, low, high, step?, log?}}.
     """
     params = {}
     for name, spec in space.items():
@@ -20,6 +20,8 @@ def suggest_params(trial, space):
             params[name] = trial.suggest_float(
                 name, spec.low, spec.high, log=spec.get("log", False)
             )
+        elif spec.type == "categorical":
+            params[name] = trial.suggest_categorical(name, list(spec.choices))
         else:
             raise ValueError(f"Неизвестный тип параметра: {spec.type}")
     return params

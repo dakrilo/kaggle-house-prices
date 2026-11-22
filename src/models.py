@@ -14,6 +14,7 @@ from sklearn.tree import DecisionTreeRegressor
 from xgboost import XGBRegressor
 
 from src.data import build_preprocessor
+from src.nn import MLPRegressorTorch
 
 MODELS = {
     "linreg": LinearRegression,
@@ -26,6 +27,7 @@ MODELS = {
     "catboost": CatBoostRegressor,
     "lgbm": LGBMRegressor,
     "xgb": XGBRegressor,
+    "mlp": MLPRegressorTorch,
 }
 
 

@@ -1,9 +1,8 @@
 import numpy as np
-
 import torch
+from sklearn.base import BaseEstimator, RegressorMixin
 from torch import nn
-
-from sklearn.base import BaseEstimator, ClassifierMixin
+from tqdm import tqdm
 
 ACTIVATIONS = {
     "relu": nn.ReLU,
@@ -13,8 +12,8 @@ ACTIVATIONS = {
 }
 
 
-class MLPClassifierTorch(ClassifierMixin, BaseEstimator):
-    """Полносвязная сеть на PyTorch в обёртке sklearn: работает в Pipeline, CV и ансамблях."""
+class MLPRegressorTorch(RegressorMixin, BaseEstimator):
+    """Полносвязная сеть-регрессор на PyTorch в обёртке sklearn: работает в Pipeline, CV и ансамблях."""
 
     def __init__(
         self,
@@ -30,6 +29,7 @@ class MLPClassifierTorch(ClassifierMixin, BaseEstimator):
         epochs=100,
         batch_size=64,
         random_state=42,
+        verbose=False,
     ):
         self.hidden_size = hidden_size
         self.n_layers = n_layers
@@ -43,9 +43,10 @@ class MLPClassifierTorch(ClassifierMixin, BaseEstimator):
         self.epochs = epochs
         self.batch_size = batch_size
         self.random_state = random_state
+        self.verbose = verbose
 
     def _build_net(self, n_features):
-        """Собирает сеть: n_layers × (Linear → [BatchNorm] → активация → [Dropout]) и выход Linear на 1 логит."""
+        """Собирает сеть: n_layers × (Linear → [BatchNorm] → активация → [Dropout]) и выход Linear на 1 выход."""
         layers = []
         in_size = n_features
         for _ in range(self.n_layers):
@@ -60,10 +61,13 @@ class MLPClassifierTorch(ClassifierMixin, BaseEstimator):
         return nn.Sequential(*layers)
 
     def fit(self, X, y):
-        """Обучает сеть мини-батчами на BCEWithLogitsLoss."""
+        """Обучает сеть мини-батчами на MSELoss. Цель нормируется внутри."""
         torch.manual_seed(self.random_state)
         X = torch.tensor(np.asarray(X, dtype=np.float32))
-        y = torch.tensor(np.asarray(y, dtype=np.float32)).reshape(-1, 1)
+        y = np.asarray(y, dtype=np.float32)
+        self.y_mean_ = y.mean()
+        self.y_std_ = y.std()
+        y = torch.tensor((y - self.y_mean_) / self.y_std_).reshape(-1, 1)
 
         self.net_ = self._build_net(X.shape[1])
 
@@ -87,30 +91,32 @@ class MLPClassifierTorch(ClassifierMixin, BaseEstimator):
                 optimizer, T_max=self.epochs
             )
 
-        loss_fn = nn.BCEWithLogitsLoss()
+        loss_fn = nn.MSELoss()
 
         self.net_.train()
-        for epoch in range(self.epochs):
+        epochs = range(self.epochs)
+        if self.verbose:
+            epochs = tqdm(epochs, desc="Обучение")
+        for epoch in epochs:
             perm = torch.randperm(len(X))
+            epoch_loss = 0.0
             for start in range(0, len(X), self.batch_size):
                 idx = perm[start : start + self.batch_size]
                 optimizer.zero_grad()
                 loss = loss_fn(self.net_(X[idx]), y[idx])
                 loss.backward()
                 optimizer.step()
+                epoch_loss += loss.item() * len(idx)
             if scheduler is not None:
                 scheduler.step()
-        self.classes_ = np.array([0, 1])
+            if self.verbose:
+                epochs.set_postfix(loss=epoch_loss / len(X))
         return self
 
-    def predict_proba(self, X):
-        """Возвращает вероятности классов: столбцы [P(0), P(1)]."""
+    def predict(self, X):
+        """Возвращает предсказания в исходной шкале цели (обратная нормировка)."""
         X = torch.tensor(np.asarray(X, dtype=np.float32))
         self.net_.eval()
         with torch.no_grad():
-            p = torch.sigmoid(self.net_(X)).numpy().ravel()
-        return np.column_stack([1 - p, p])
-
-    def predict(self, X):
-        """Возвращает метки 0/1 по порогу 0.5."""
-        return (self.predict_proba(X)[:, 1] > 0.5).astype(int)
+            out = self.net_(X).numpy().ravel()
+        return out * self.y_std_ + self.y_mean_
