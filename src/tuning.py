@@ -1,5 +1,6 @@
 import optuna
 from omegaconf import OmegaConf
+from tqdm import tqdm
 
 from src.models import build_model
 from src.validation import cross_validate
@@ -40,6 +41,7 @@ def tune(config, X, y, X_test, model_name, n_trials=None):
     n_trials = n_trials or config.tuning.n_trials
 
     def objective(trial):
+        """Одна попытка Optuna: параметры из space + fixed, возвращает средний RMSE по фолдам."""
         params = suggest_params(trial, space)
         cfg = OmegaConf.merge(config, {"model": {"name": model_name}})
         cfg.model.params = {**fixed, **params}
@@ -48,5 +50,15 @@ def tune(config, X, y, X_test, model_name, n_trials=None):
 
     sampler = optuna.samplers.TPESampler(seed=config.seed)
     study = optuna.create_study(direction="minimize", sampler=sampler)
-    study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
+
+    # текстовый прогресс-бар: сохраняется в ноутбуке, в отличие от виджета
+    bar = tqdm(total=n_trials, desc=f"Optuna {model_name}")
+
+    def update_bar(study, trial):
+        """После каждой попытки сдвигает полоску и показывает лучший RMSE."""
+        bar.update(1)
+        bar.set_postfix(best=round(study.best_value, 4))
+
+    study.optimize(objective, n_trials=n_trials, callbacks=[update_bar])
+    bar.close()
     return study

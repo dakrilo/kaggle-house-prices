@@ -34,8 +34,6 @@ MODELS = {
 def get_model(name, params):
     """Возвращает модель по имени из MODELS с параметрами params."""
     model_class = MODELS[name]
-    # CatBoost: cat_features нужен кортежем, со списком ломается sklearn.clone
-    params = {k: tuple(v) if isinstance(v, list) else v for k, v in params.items()}
     return model_class(**params)
 
 

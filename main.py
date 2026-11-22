@@ -12,7 +12,7 @@ from src.validation import cross_validate
 
 
 def main():
-    # редкие категории кодируются нулями, это ожидаемо
+    """Загружает данные, оценивает модель из конфига на CV и сохраняет сабмит."""
     warnings.filterwarnings("ignore", message="Found unknown categories")
 
     cli = OmegaConf.from_cli()

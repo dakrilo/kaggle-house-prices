@@ -45,8 +45,10 @@ def encode_ordinal(df, config):
 
 def load_data(config):
     """
-    Загружает train и test, отделяет целевую переменную и id.
-    Заполняет пропуски «объекта нет». Возвращает X, y, X_test, test_ids.
+    Загружает train и test, убирает выбросы из data.drop_ids,
+    отделяет цель (log1p, если log_target) и id.
+    Затем заполняет пропуски «объекта нет», кодирует порядковые категории
+    и добавляет новые признаки. Возвращает X, y, X_test, test_ids.
     """
     train = pd.read_csv(config.data.train_path)
     test = pd.read_csv(config.data.test_path)

@@ -34,12 +34,12 @@ features:
 preprocessing:
   encoder: onehot
   scale: true
-  fill_none: ["PoolQC", "MiscFeature", "Alley", "Fence", "FireplaceQu",
+  fill_none: ["Alley", "Fence", "FireplaceQu",
               "GarageType", "GarageFinish", "GarageQual", "GarageCond",
               "BsmtQual", "BsmtCond", "BsmtExposure", "BsmtFinType1", "BsmtFinType2",
               "MasVnrType"]
   fill_zero: ["MasVnrArea", "BsmtFinSF1", "BsmtFinSF2", "BsmtUnfSF", "TotalBsmtSF",
-              "BsmtFullBath", "BsmtHalfBath", "GarageCars", "GarageArea"]
+              "BsmtFullBath", "BsmtHalfBath", "GarageCars"]
   ordinal:
     scales:
       quality: {"None": 0, "Po": 1, "Fa": 2, "TA": 3, "Gd": 4, "Ex": 5}
@@ -124,6 +124,4 @@ tuned:
   mlp: {n_layers: 1, hidden_size: 256, dropout: 0.35, weight_decay: 0.0065,
         lr: 0.0064, epochs: 200, optimizer: "sgd", activation: "gelu",
         batchnorm: false, batch_size: 64, random_state: "${seed}"}
-  lasso:
-    alpha: 0.00041
-    max_iter: 20000
+  lasso: {alpha: 0.00041, max_iter: 20000}
