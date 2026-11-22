@@ -15,10 +15,38 @@ from sklearn.preprocessing import (
 from src.features import add_features
 
 
+def fill_absent(df, config):
+    """
+    Заполняет пропуски, которые значат «объекта нет»:
+    категории из fill_none → "None", числа из fill_zero → 0.
+    """
+    df = df.copy()
+    none_cols = list(config.preprocessing.get("fill_none", []))
+    zero_cols = list(config.preprocessing.get("fill_zero", []))
+    df[none_cols] = df[none_cols].fillna("None")
+    df[zero_cols] = df[zero_cols].fillna(0)
+    return df
+
+
+def encode_ordinal(df, config):
+    """
+    Порядковые категории → числа по шкалам из config.preprocessing.ordinal.
+    Значения, которых нет в шкале, становятся NaN.
+    """
+    df = df.copy()
+    ordinal = config.preprocessing.get("ordinal", None)
+    if ordinal is None:
+        return df
+    for col, scale_name in ordinal.columns.items():
+        mapping = dict(ordinal.scales[scale_name])
+        df[col] = df[col].map(mapping)
+    return df
+
+
 def load_data(config):
     """
     Загружает train и test, отделяет целевую переменную и id.
-    Возвращает X, y, X_test, test_ids.
+    Заполняет пропуски «объекта нет». Возвращает X, y, X_test, test_ids.
     """
     train = pd.read_csv(config.data.train_path)
     test = pd.read_csv(config.data.test_path)
@@ -26,12 +54,21 @@ def load_data(config):
     target = config.data.target
     id_col = config.data.id_column
 
+    drop_ids = list(config.data.get("drop_ids", []))
+    train = train[~train[id_col].isin(drop_ids)].reset_index(drop=True)
+
     y = train[target]
     if config.data.get("log_target", False):
         y = np.log1p(y)
     X = train.drop(columns=[target, id_col])
     X_test = test.drop(columns=[id_col])
     test_ids = test[id_col]
+
+    X = fill_absent(X, config)
+    X_test = fill_absent(X_test, config)
+
+    X = encode_ordinal(X, config)
+    X_test = encode_ordinal(X_test, config)
 
     X = add_features(X)
     X_test = add_features(X_test)

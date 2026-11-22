@@ -4,6 +4,7 @@ data:
   target: SalePrice
   id_column: Id
   log_target: true
+  drop_ids: [524, 1299]
 
 metric: neg_root_mean_squared_error
 n_splits: 5
@@ -15,14 +16,55 @@ results_path: ${output_dir}/results.csv
 reports_dir: reports
 
 features:
-  numeric: ["OverallQual", "GrLivArea", "GarageCars", "TotalBsmtSF"]
-  categorical: []
-  log_numeric: []
+  numeric: ["OverallQual", "OverallCond", "YearBuilt", "YearRemodAdd", "BsmtFinSF2",
+            "BsmtUnfSF", "TotalBsmtSF", "BsmtFullBath", "BsmtHalfBath", "FullBath",
+            "HalfBath", "BedroomAbvGr", "KitchenAbvGr", "Fireplaces", "GarageCars",
+            "EnclosedPorch", "ScreenPorch", "MoSold", "YrSold",
+            "ExterQual", "ExterCond", "BsmtQual", "BsmtCond", "HeatingQC", "KitchenQual",
+            "FireplaceQu", "GarageQual", "GarageCond", "BsmtExposure", "BsmtFinType1",
+            "BsmtFinType2", "GarageFinish", "Functional", "PavedDrive"]
+  categorical: ["MSZoning", "Alley", "LotShape", "LandContour", "LotConfig", "LandSlope",
+                "Neighborhood", "Condition1", "BldgType", "HouseStyle", "RoofStyle",
+                "Exterior1st", "Exterior2nd", "MasVnrType", "Foundation", "CentralAir",
+                "Electrical", "GarageType", "Fence", "SaleType", "SaleCondition", "MSSubClass"]
+  log_numeric: ["LotArea", "GrLivArea", "1stFlrSF", "2ndFlrSF", "LotFrontage",
+                "MasVnrArea", "OpenPorchSF", "WoodDeckSF", "BsmtFinSF1"]
 
 preprocessing:
   encoder: onehot
   scale: true
+  fill_none: ["PoolQC", "MiscFeature", "Alley", "Fence", "FireplaceQu",
+              "GarageType", "GarageFinish", "GarageQual", "GarageCond",
+              "BsmtQual", "BsmtCond", "BsmtExposure", "BsmtFinType1", "BsmtFinType2",
+              "MasVnrType"]
+  fill_zero: ["MasVnrArea", "BsmtFinSF1", "BsmtFinSF2", "BsmtUnfSF", "TotalBsmtSF",
+              "BsmtFullBath", "BsmtHalfBath", "GarageCars", "GarageArea"]
+  ordinal:
+    scales:
+      quality: {"None": 0, "Po": 1, "Fa": 2, "TA": 3, "Gd": 4, "Ex": 5}
+      exposure: {"None": 0, "No": 1, "Mn": 2, "Av": 3, "Gd": 4}
+      fin_type: {"None": 0, "Unf": 1, "LwQ": 2, "Rec": 3, "BLQ": 4, "ALQ": 5, "GLQ": 6}
+      garage_finish: {"None": 0, "Unf": 1, "RFn": 2, "Fin": 3}
+      functional: {"Sal": 0, "Sev": 1, "Maj2": 2, "Maj1": 3, "Mod": 4, "Min2": 5, "Min1": 6, "Typ": 7}
+      paved: {"N": 0, "P": 1, "Y": 2}
+    columns:
+      ExterQual: quality
+      ExterCond: quality
+      BsmtQual: quality
+      BsmtCond: quality
+      HeatingQC: quality
+      KitchenQual: quality
+      FireplaceQu: quality
+      GarageQual: quality
+      GarageCond: quality
+      BsmtExposure: exposure
+      BsmtFinType1: fin_type
+      BsmtFinType2: fin_type
+      GarageFinish: garage_finish
+      Functional: functional
+      PavedDrive: paved
 
 model:
-  name: linreg
-  params: {}
+  name: ridge
+  params:
+    alpha: 10
