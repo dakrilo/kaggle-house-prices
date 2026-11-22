@@ -66,10 +66,9 @@ preprocessing:
       PavedDrive: paved
 
 model:
-  name: lasso
-  params:
-    alpha: 0.00041
-    max_iter: 20000
+  name: voting
+  members: [lasso, mlp, xgb]
+  params: {}
 
 tuning:
   n_trials: 40
@@ -125,3 +124,6 @@ tuned:
   mlp: {n_layers: 1, hidden_size: 256, dropout: 0.35, weight_decay: 0.0065,
         lr: 0.0064, epochs: 200, optimizer: "sgd", activation: "gelu",
         batchnorm: false, batch_size: 64, random_state: "${seed}"}
+  lasso:
+    alpha: 0.00041
+    max_iter: 20000

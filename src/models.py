@@ -1,7 +1,7 @@
 from catboost import CatBoostRegressor
 from lightgbm import LGBMRegressor
 from omegaconf import OmegaConf
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, VotingRegressor
 from sklearn.linear_model import (
     ElasticNet,
     Lasso,
@@ -39,15 +39,27 @@ def get_model(name, params):
     return model_class(**params)
 
 
-def build_model(config):
-    """
-    Собирает пайплайн: предобработка из конфига, затем модель из config.model
-    """
-    params = OmegaConf.to_container(config.model.params, resolve=True)
-    model = get_model(config.model.name, params)
+def build_single(config, name, params):
+    """Пайплайн: предобработка из конфига, затем модель name с параметрами params."""
+    params = OmegaConf.to_container(params, resolve=True)
     return Pipeline(
         [
             ("prep", build_preprocessor(config)),
-            ("model", model),
+            ("model", get_model(name, params)),
         ]
     )
+
+
+def build_model(config):
+    """
+    Собирает модель из config.model.
+    name: voting — VotingRegressor из участников members с параметрами из config.tuned.
+    Иначе одиночная модель с config.model.params.
+    """
+    if config.model.name == "voting":
+        estimators = [
+            (name, build_single(config, name, config.tuned[name]))
+            for name in config.model.members
+        ]
+        return VotingRegressor(estimators=estimators)
+    return build_single(config, config.model.name, config.model.params)

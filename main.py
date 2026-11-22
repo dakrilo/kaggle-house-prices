@@ -2,6 +2,8 @@
 Запуск: python main.py
 """
 
+import warnings
+
 from omegaconf import OmegaConf
 
 from src.data import load_data, save_submission
@@ -10,6 +12,9 @@ from src.validation import cross_validate
 
 
 def main():
+    # редкие категории кодируются нулями, это ожидаемо
+    warnings.filterwarnings("ignore", message="Found unknown categories")
+
     cli = OmegaConf.from_cli()
     config = OmegaConf.merge(OmegaConf.load("config.yaml"), cli)
     X, y, X_test, test_ids = load_data(config)
