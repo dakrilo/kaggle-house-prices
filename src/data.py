@@ -118,7 +118,7 @@ def build_preprocessor(config):
 
     log_steps = [
         ("imputer", SimpleImputer(strategy="median")),
-        ("log", FunctionTransformer(np.log1p)),
+        ("log", FunctionTransformer(np.log1p, feature_names_out="one-to-one")),
     ]
     if config.preprocessing.scale:
         log_steps.append(("scaler", StandardScaler()))

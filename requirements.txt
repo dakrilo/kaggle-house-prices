@@ -10,5 +10,6 @@ xgboost==3.4.1
 optuna==5.1.0
 ipywidgets==8.1.9
 tqdm==4.70.1
+shap==0.54.1
 omegaconf==2.4.0
 ipykernel==7.4.0
